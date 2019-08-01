@@ -5,6 +5,7 @@
 #
 from skbuild import setup
 from setuptools import Command
+from setuptools import find_packages
 
 
 class GcovCommand(Command):
@@ -43,7 +44,7 @@ def main():
     setup(
         package_dir={"": "src"},
         packages=find_packages(where="src"),
-        install_requires=[],
+        install_requires=["numpy"],
         setup_requires=["pytest-runner"],
         tests_require=tests_require,
         test_suite="tests",
