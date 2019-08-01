@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 function build_pybind {
 
   git clone git@github.com:pybind/pybind11.git env/src/pybind11
