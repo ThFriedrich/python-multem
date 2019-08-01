@@ -18,7 +18,7 @@ function build_pybind {
 
 function build_multem {
 
-  git clone git@github.com:jmp1985/MULTEM.git env/src/MULTEM
+  git submodule update --init
 
 }
 
