@@ -13,11 +13,17 @@ set(HAS_FLTO_THIN False)
 
 # Add a C/C++ extension
 pybind11_add_module(multem_ext 
-  src/multem/multem.cc
-  src/multem/multem.cu)
+  src/multem/multem_ext.cu
+  src/multem/multem_ext.cc)
 
 # Ensure we are using C++11
 target_compile_features(multem_ext PUBLIC cxx_std_11)
+
+# Set the include directory
+target_include_directories(multem_ext PUBLIC 
+  src
+  MULTEM/src
+  MULTEM/gui_multem)
 
 # Set the coverage compile and link flags for gcc or clang
 set(COVERAGE_COMPILE_FLAGS -coverage)
