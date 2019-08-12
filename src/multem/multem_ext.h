@@ -1,239 +1,519 @@
+/*
+ *  multem_ext.h
+ *
+ *  Copyright (C) 2019 Diamond Light Source
+ *
+ *  Author: James Parkhurst
+ *
+ *  This code is distributed under the GPLv3 license, a copy of 
+ *  which is included in the root directory of this package.
+ */
 
 #ifndef MULTEM_EXT_H
 #define MULTEM_EXT_H
 
-#include <memory>
+#include <array>
+#include <string>
+#include <vector>
+#include <complex>
 
-namespace mt {
-  class System_Configuration;
+namespace multem {
 
-  template<typename T>
-  class Input_Multislice;
-}
+  class Atom {
+  public:
+      int element;
+      double x;
+      double y;
+      double z;
+      double sigma;
+      double occupancy;
+      int region;
+      int charge;
+      
+      Atom()
+        : element(0),
+          x(0),
+          y(0),
+          z(0),
+          sigma(0),
+          occupancy(0),
+          region(0),
+          charge(0) {}
+  };
 
+  class AmorphousLayer {
+  public:
 
-bool is_gpu_available_wrapper();
-int number_of_gpu_available_wrapper();
+    double z_0;
+    double z_e;
+    double dz;
 
-class SystemConfigurationWrapper {
-public:
+    AmorphousLayer()
+      : z_0(0),
+        z_e(0),
+        dz(0) {}
+
+  };
+
+  class STEMDetector {
+  public:
+
+    class Angles {
+    public:
+      double inner_ang;
+      double outer_ang;
+      Angles()
+        : inner_ang(0),
+          outer_ang(0) {}
+    };
+
+    class Radial {
+    public:
+      double x;
+      std::vector<double> fx;
+      Radial()
+        : x(0) {}
+    };
+
+    class Matrix {
+    public:
+      double R;
+      std::vector<double> fR;
+      Matrix()
+        : R(0) {}
+    };
   
-  SystemConfigurationWrapper();
-  SystemConfigurationWrapper(
-    const char *device,
-    const char *precision,
-    int cpu_ncores,
-    int cpu_nthread,
-    int gpu_device,
-    int gpu_stream);
-  int get_device();
-  bool is_host() const;
-  bool is_device() const;
-  bool is_float() const;
-  bool is_double() const;
-  bool is_float_host() const;
-  bool is_double_host() const;
-  bool is_float_device() const;
-  bool is_double_device() const;
+    std::string type;
+    std::vector<Angles> cir;
+    std::vector<Radial> radial;
+    std::vector<Matrix> matrix;
+  };
 
-  std::shared_ptr<mt::System_Configuration> handle() {
-    return handle_;
-  }
+  class Input {
+  public:
 
-private:
+    // Electron-specimen interaction model 
+    std::string interaction_model; 
+    std::string potential_type;  
+    std::string operation_mode;
+    std::size_t memory_size;
+    bool reverse_multislice;
     
-  std::shared_ptr<mt::System_Configuration> handle_; 
- 
-};
+    // Electron-Phonon interaction model
+    std::string pn_model;
+    bool pn_coh_contrib;
+    bool pn_single_conf;
+    int pn_nconf;
+    int pn_dim;
+    int pn_seed;
+
+    // Specimen information
+    std::vector<Atom> spec_atoms;
+    double spec_dz;
+    double spec_lx;
+    double spec_ly;
+    double spec_lz;
+    int spec_cryst_na;
+    int spec_cryst_nb;
+    int spec_cryst_nc;
+    double spec_cryst_a;
+    double spec_cryst_b;
+    double spec_cryst_c;
+    double spec_cryst_x0;
+    double spec_cryst_y0;
+    std::vector<AmorphousLayer> spec_amorp;
+
+    // Specimen rotation
+    double spec_rot_theta;
+    std::array<double, 3> spec_rot_u0;
+    std::string spec_rot_center_type;
+    std::array<double, 3> spec_rot_center_p;
+
+    // Specimen thickness
+    std::string thick_type;
+    std::vector<double> thick;
+
+    // Potential slicing
+    std::string potential_slicing;
+
+    // X-Y sampling
+    int nx;
+    int ny;
+    bool bwl;
+
+    // Simulation type
+    std::string simulation_type;
+
+    // Incident wave
+    std::string iw_type;
+    std::vector< std::complex<double> > iw_psi;
+    std::vector<double> iw_x;
+    std::vector<double> iw_y;
+
+    // Microscope parameters
+    double E_0;
+    double theta;
+    double phi;
+
+    // Illumination model
+    std::string illumination_model;
+    std::string temporal_spatial_incoh;
+
+    // Condenser lens
+    int cond_lens_m;
+    double cond_lens_c_10;
+    double cond_lens_c_12;
+    double cond_lens_phi_12;
+    double cond_lens_c_21;
+    double cond_lens_phi_21;
+    double cond_lens_c_23;
+    double cond_lens_phi_23;
+    double cond_lens_c_30;
+    double cond_lens_c_32;
+    double cond_lens_phi_32;
+    double cond_lens_c_34;
+    double cond_lens_phi_34;
+    double cond_lens_c_41;
+    double cond_lens_phi_41;
+    double cond_lens_c_43;
+    double cond_lens_phi_43;
+    double cond_lens_c_45;
+    double cond_lens_phi_45;
+    double cond_lens_c_50;
+    double cond_lens_c_52;
+    double cond_lens_phi_52;
+    double cond_lens_c_54;
+    double cond_lens_phi_54;
+    double cond_lens_c_56;
+    double cond_lens_phi_56;
+    double cond_lens_inner_aper_ang;
+    double cond_lens_outer_aper_ang;
+
+    // Source spread function
+    double cond_lens_ssf_sigma;
+    int cond_lens_ssf_npoints;
+    
+    // Defocus spread function
+    double cond_lens_dsf_sigma;
+    int cond_lens_dsf_npoints;
+
+    // Zero defocus reference
+    std::string cond_lens_zero_defocus_type;
+    double cond_lens_zero_defocus_plane;
+
+    // Objective lens
+    int obj_lens_m;
+    double obj_lens_c_10;
+    double obj_lens_c_12;
+    double obj_lens_phi_12;
+    double obj_lens_c_21;
+    double obj_lens_phi_21;
+    double obj_lens_c_23;
+    double obj_lens_phi_23;
+    double obj_lens_c_30;
+    double obj_lens_c_32;
+    double obj_lens_phi_32;
+    double obj_lens_c_34;
+    double obj_lens_phi_34;
+    double obj_lens_c_41;
+    double obj_lens_phi_41;
+    double obj_lens_c_43;
+    double obj_lens_phi_43;
+    double obj_lens_c_45;
+    double obj_lens_phi_45;
+    double obj_lens_c_50;
+    double obj_lens_c_52;
+    double obj_lens_phi_52;
+    double obj_lens_c_54;
+    double obj_lens_phi_54;
+    double obj_lens_c_56;
+    double obj_lens_phi_56;
+    double obj_lens_inner_aper_ang;
+    double obj_lens_outer_aper_ang;
+
+    // Defocus spread function
+    double obj_lens_dsf_sigma;
+    int obj_lens_dsf_npoints;
+
+    // Zero defocus reference
+    std::string obj_lens_zero_defocus_type;
+    double obj_lens_zero_defocus_plane;
+
+    // STEM detector
+    STEMDetector detector;
+
+    // Scanning area for ISTEM/STEM/EELS
+    std::string scanning_type;
+    bool scanning_periodic;
+    int scanning_ns;
+    double scanning_x0;
+    double scanning_y0;
+    double scanning_xe;
+    double scanning_ye;
+
+    // PED
+    double ped_nrot;
+    double ped_theta;
+
+    // HCI
+    double hci_nrot;
+    double hci_theta;
+
+    // EELS
+    int eels_Z;
+    double eels_E_loss;
+    double eels_collection_angle;
+    int eels_m_selection;
+    std::string eels_channelling_type;
+
+    // EFTEM
+    int eftem_Z;
+    double eftem_E_loss;
+    double eftem_collection_angle;
+    int eftem_m_selection;
+    std::string eftem_channelling_type;
+
+    // Output region
+    int output_area_ix_0;
+    int output_area_iy_0;
+    int output_area_ix_e;
+    int output_area_iy_e;
+
+    /**
+     * Set the default parameters
+     */
+    Input()
+      : interaction_model("Multislice"), 
+        potential_type("Lobato"),
+        operation_mode("Normal"),
+        memory_size(0),
+        reverse_multislice(false),
+        pn_model("Still_Atom"),
+        pn_coh_contrib(false),
+        pn_single_conf(false),
+        pn_nconf(1),
+        pn_dim(110),
+        pn_seed(300183),
+        spec_dz(0.25),
+        spec_lx(10),
+        spec_ly(10),
+        spec_lz(10),
+        spec_cryst_na(1),
+        spec_cryst_nb(1),
+        spec_cryst_nc(1),
+        spec_cryst_a(0),
+        spec_cryst_b(0),
+        spec_cryst_c(0),
+        spec_cryst_x0(0),
+        spec_cryst_y0(0),
+        spec_rot_theta(0),
+        spec_rot_u0({0, 0, 1}),
+        spec_rot_center_type("geometric_center"),
+        spec_rot_center_p({0, 0, 0}),
+        thick_type("Whole_Spec"),
+        thick(0),
+        potential_slicing("Planes"),
+        nx(256),
+        ny(256),
+        bwl(0),
+        simulation_type("EWRS"),
+        iw_type("auto"),
+        iw_psi(0),
+        iw_x(0.0),
+        iw_y(0.0),
+        E_0(300.0),
+        theta(0.0),
+        phi(0.0),
+        illumination_model("Partial_Coherent"),
+        temporal_spatial_incoh("Temporal_Spatial"),
+        cond_lens_m(0),
+        cond_lens_c_10(14.0312),
+        cond_lens_c_12(0.0),
+        cond_lens_phi_12(0.0),
+        cond_lens_c_21(0.0),
+        cond_lens_phi_21(0.0),
+        cond_lens_c_23(0.0),
+        cond_lens_phi_23(0.0),
+        cond_lens_c_30(1e-3),
+        cond_lens_c_32(0.0),
+        cond_lens_phi_32(0.0),
+        cond_lens_c_34(0.0),
+        cond_lens_phi_34(0.0),
+        cond_lens_c_41(0.0),
+        cond_lens_phi_41(0.0),
+        cond_lens_c_43(0.0),
+        cond_lens_phi_43(0.0),
+        cond_lens_c_45(0.0),
+        cond_lens_phi_45(0.0),
+        cond_lens_c_50(0.0),
+        cond_lens_c_52(0.0),
+        cond_lens_phi_52(0.0),
+        cond_lens_c_54(0.0),
+        cond_lens_phi_54(0.0),
+        cond_lens_c_56(0.0),
+        cond_lens_phi_56(0.0),
+        cond_lens_inner_aper_ang(0.0),
+        cond_lens_outer_aper_ang(21.0),
+        cond_lens_ssf_sigma(0.0072),
+        cond_lens_ssf_npoints(8),
+        cond_lens_dsf_sigma(32),
+        cond_lens_dsf_npoints(10),
+        cond_lens_zero_defocus_type("First"),
+        cond_lens_zero_defocus_plane(0),
+        obj_lens_m(0),
+        obj_lens_c_10(14.0312),
+        obj_lens_c_12(0.0),
+        obj_lens_phi_12(0.0),
+        obj_lens_c_21(0.0),
+        obj_lens_phi_21(0.0),
+        obj_lens_c_23(0.0),
+        obj_lens_phi_23(0.0),
+        obj_lens_c_30(1e-3),
+        obj_lens_c_32(0.0),
+        obj_lens_phi_32(0.0),
+        obj_lens_c_34(0.0),
+        obj_lens_phi_34(0.0),
+        obj_lens_c_41(0.0),
+        obj_lens_phi_41(0.0),
+        obj_lens_c_43(0.0),
+        obj_lens_phi_43(0.0),
+        obj_lens_c_45(0.0),
+        obj_lens_phi_45(0.0),
+        obj_lens_c_50(0.0),
+        obj_lens_c_52(0.0),
+        obj_lens_phi_52(0.0),
+        obj_lens_c_54(0.0),
+        obj_lens_phi_54(0.0),
+        obj_lens_c_56(0.0),
+        obj_lens_phi_56(0.0),
+        obj_lens_inner_aper_ang(0.0),
+        obj_lens_outer_aper_ang(24.0),
+        obj_lens_dsf_sigma(32),
+        obj_lens_dsf_npoints(10),
+        obj_lens_zero_defocus_type("Last"),
+        obj_lens_zero_defocus_plane(0),
+        scanning_type("Line"),
+        scanning_periodic(true),
+        scanning_ns(10),
+        scanning_x0(0.0),
+        scanning_y0(0.0),
+        scanning_xe(4.078),
+        scanning_ye(4.078),
+        ped_nrot(360),
+        ped_theta(3.0),
+        hci_nrot(360),
+        hci_theta(3.0),
+        eels_Z(79),
+        eels_E_loss(80),
+        eels_collection_angle(100),
+        eels_m_selection(3),
+        eels_channelling_type("Single_Channelling"),
+        eftem_Z(79),
+        eftem_E_loss(80),
+        eftem_collection_angle(100),
+        eftem_m_selection(3),
+        eftem_channelling_type("Single_Channelling"),
+        output_area_ix_0(1),
+        output_area_iy_0(1),
+        output_area_ix_e(1),
+        output_area_iy_e(1) {}
+  };
+
+  class SystemConfiguration {
+  public:
+
+    std::string device;
+    std::string precision;
+    std::size_t cpu_ncores;
+    std::size_t cpu_nthread;
+    std::size_t gpu_device;
+    std::size_t gpu_nstream;
+    
+    SystemConfiguration()
+      : device("device"),
+        precision("float"),
+        cpu_ncores(1),
+        cpu_nthread(1),
+        gpu_device(0),
+        gpu_nstream(1) {}
+
+  };
+
+  template <typename T>
+  class Image {
+  public:
+
+    typedef T value_type;
+    typedef std::array<std::size_t, 2> shape_type;
+
+    std::vector<value_type> data;
+    shape_type shape;
+
+    Image()
+      : shape({ 0, 0 }) {}
+
+    template <typename U>
+    Image(const U *data_, shape_type shape_)
+      : shape(shape_) {
+      std::size_t size = shape[0]*shape[1];
+      data.assign(data_, data_ + size);
+    }
+  };
+
+  template <typename T>
+  class Image< std::complex<T> > {
+  public:
+    
+    typedef std::complex<T> value_type;
+    typedef std::array<std::size_t, 2> shape_type;
+
+    std::vector<value_type> data;
+    shape_type shape;
+
+    Image()
+      : shape({ 0, 0 }) {}
+
+    template <typename U>
+    Image(const U *data_, shape_type shape_)
+      : shape(shape_) {
+      std::size_t size = shape[0]*shape[1];
+      data.resize(size);
+      for (auto i = 0; i < size; ++i) {
+        data[i] = value_type(data_[i].real(), data_[i].imag());
+      }
+    }
+    
+  };
+
+  class Data {
+  public:
+
+    std::vector< Image<double> > image_tot;
+    std::vector< Image<double> > image_coh;
+    
+    Image<double> m2psi_tot;
+    Image<double> m2psi_coh;
+    Image< std::complex<double> > psi_coh;
+
+  };
+
+  class Output {
+  public:
+      
+    double dx;
+    double dy;
+    std::vector<double> x;
+    std::vector<double> y;
+    std::vector<double> thick;
+    std::vector<Data> data; 
+
+  };
 
 
+  Output simulate(SystemConfiguration config, Input input);
 
-class InputMultisliceWrapper {
-public:
-
-  typedef float FloatType;
-  typedef mt::Input_Multislice<FloatType> InputMultisliceType;
-
-  void set_system_conf(SystemConfigurationWrapper system_conf);
-  void set_interaction_model(const char *interaction_model);
-  void set_potential_type(const char *potential_type);
-  void set_pn_model(const char *pn_model);
-  void set_pn_coh_contrib(bool pn_coh_contrib);
-  void set_pn_single_conf(bool pn_single_conf);
-  /* FP_Dim pn_dim;                    // Phonon dimensions */
-  void set_fp_dist(int fp_dist);
-  void set_pn_seed(int pn_seed);
-  void set_pn_nconf(int pn_nconf);
-  void set_fp_iconf_0(int fp_iconf_0);
-
-  /* Atom_Data<T> atoms;                 // atoms */
-  void set_is_crystal(bool is_crystal);
-  void set_spec_rot_theta(FloatType spec_rot_theta);
-  
-  /* r3d<T> spec_rot_u0;                 // unitary vector */     
-  void set_spec_rot_center_type(const char *spec_rot_center_type);
-  /* r3d<T> spec_rot_center_p;               // rotation point */
-
-  void set_thick_type(const char *thick_type);
-  /* host_vector<T> thick;                 // Array of thickes */
-
-  void set_potential_slicing(const char *potential_slicing);
-
-  /* Grid_2d<T> grid_2d;                 // grid information */
-
-  /* Range_2d output_area;               // Output region information */
-
-  void set_simulation_type(const char *simulation_type);
-  void set_iw_type(const char *iw_type);
-  /* host_vector<complex<T>> iw_psi;           // user define incident wave */
-  /* host_vector<T> iw_x;                // x position */
-  /* host_vector<T> iw_y;                // y position */
-
-  void set_E_0(FloatType E_0);
-  void set_lambda(FloatType lambda);
-  void set_theta(FloatType theta);
-  void set_phi(FloatType phi);
-
-  void set_illumination_model(const char *illumination_model);
-
-  /* Lens<T> cond_lens;                  // Condenser lens */
-  /* Lens<T> obj_lens;                   // Objective lens */
-
-  /* Scanning<T> scanning;                 // Scanning */
-
-  /* Detector<T, e_host> detector;             // STEM Detectors */
-
-  /* EELS<T> eels_fr;                  // EELS */
-
-  void set_operation_mode(const char *operation_mode);
-  void set_slice_storage(bool slice_storage);
-  void set_mul_sign(int mul_sign);
-  void set_Vrl(FloatType Vrl);
-  void set_nR(int nR);
-  void set_nrot(int nrot);
-  void set_cdl_var_type(const char *cdl_var_type);
-  /* host_vector<T> cdl_var;               // Array of thickes */
-  /* host_vector<int> iscan; */
-  /* host_vector<T> beam_x;                // temporal variables for */
-  /* host_vector<T> beam_y; */
-
-  void set_islice(int islice);
-  void set_dp_Shift(bool dp_Shift);                    // Shift diffraction pattern
-
-  InputMultisliceWrapper();
-  void assign(InputMultisliceWrapper &input_multislice);
-  void validate_parameters();
-  void set_reverse_multislice(bool rm);
-  void validate_output_area();
-  void set_iscan_beam_position();
-  /* template<class TVector>; */
-  /* void set_beam_position(TVector &x, TVector &y); */
-  /* eSpace get_simulation_space() const; */
-  /* void set_incident_wave_type(eIncident_Wave_Type iw_type_i); */
-  /* void set_eels_fr_atom(const int &iatoms, const Atom_Data<T> &atoms); */
-  
-  /* FloatType Rx_exp_factor(); */
-  /* FloatType Ry_exp_factor(); */
-  FloatType set_incident_angle(const FloatType &theta) const;
-  FloatType get_phonon_rot_weight() const;
-  void set_phi(const int &irot);
-  FloatType get_propagator_factor(const FloatType &z) const;
-  FloatType Vr_factor() const;
-  FloatType gx_0() const;
-  FloatType gy_0() const;
-  int number_conf();
-  int number_of_beams();
-  bool is_multi_beam();
-  bool is_spec_rot_active() const;
-  bool is_multislice() const;
-  bool is_phase_object() const;
-  bool is_weak_phase_object() const;
-  bool is_still_atom() const;
-  bool is_absorptive_model() const;
-  bool is_frozen_phonon() const;
-  bool is_frozen_phonon_single_conf() const;
-  bool is_whole_spec() const;
-  bool is_through_slices() const;
-  bool is_through_thick() const;
-  bool is_slicing_by_planes() const;
-  bool is_slicing_by_dz() const;
-  bool is_subslicing() const;
-  bool is_subslicing_whole_spec() const;
-  bool is_plane_wave() const;
-  bool is_convergent_wave() const;
-  bool is_user_define_wave() const;
-  bool is_STEM() const;
-  bool is_ISTEM() const;
-  bool is_CBED() const;
-  bool is_CBEI() const;
-  bool is_ED() const;
-  bool is_HRTEM() const;
-  bool is_PED() const;
-  bool is_HCTEM() const;
-  bool is_EWFS() const;
-  bool is_EWRS() const;
-  bool is_EWFS_SC() const;
-  bool is_EWRS_SC() const;
-  bool is_EELS() const;
-  bool is_EFTEM() const;
-  bool is_IWFS() const;
-  bool is_IWRS() const;
-  bool is_PPFS() const;
-  bool is_PPRS() const;
-  bool is_TFFS() const;
-  bool is_TFRS() const;
-  bool is_PropFS() const;
-  bool is_PropRS() const;
-  bool is_STEM_ISTEM() const;
-  bool is_CBED_CBEI() const;
-  bool is_ED_HRTEM() const;
-  bool is_PED_HCTEM() const;
-  bool is_EWFS_EWRS() const;
-  bool is_EWFS_EWRS_SC() const;
-  bool is_EELS_EFTEM() const;
-  bool is_IWFS_IWRS() const;
-  bool is_PPFS_PPRS() const;
-  bool is_TFFS_TFRS() const;
-  bool is_PropFS_PropRS() const;
-  bool is_grid_FS() const;
-  bool is_grid_RS() const;
-  bool is_simulation_type_FS() const;
-  bool is_simulation_type_RS() const;
-  bool is_specimen_required() const;
-  bool is_ISTEM_CBEI_HRTEM_HCTEM_EFTEM() const;
-  bool is_CBED_ED_EWFS_PED() const;
-  bool is_obj_lens_temp_spat() const;
-  bool is_cond_lens_temp_spat() const;
-  bool is_scanning() const;
-  bool is_illu_mod_coherent() const;
-  bool is_illu_mod_partial_coherent() const;
-  bool is_illu_mod_trans_cross_coef() const;
-  bool is_illu_mod_full_integration() const;
-  bool is_incoh_temporal_spatial() const;
-  bool is_incoh_temporal() const;
-  bool is_incoh_spatial() const;
-  bool is_detector_circular() const;
-  bool is_detector_radial() const;
-  bool is_detector_matrix() const;
-  bool is_slice_storage() const;
-  bool is_operation_mode_normal() const;
-  bool is_operation_mode_advanced() const;
-  bool is_lvt_off() const;
-  bool is_lvt_m() const;
-  bool is_lvt_Cs3() const;
-  bool is_lvt_Cs5() const;
-  bool is_lvt_mfa2() const;
-  bool is_lvt_afa2() const;
-  bool is_lvt_mfa3() const;
-  bool is_lvt_afa3() const;
-  bool is_lvt_inner_aper_ang() const;
-  bool is_lvt_outer_aper_ang() const;
-
-private:
-
-  std::shared_ptr<InputMultisliceType> handle_; 
-};
-
-
+  bool is_gpu_available();
+  int number_of_gpu_available();
+}
 
 #endif
