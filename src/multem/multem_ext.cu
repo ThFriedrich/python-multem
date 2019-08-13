@@ -163,13 +163,13 @@ namespace multem {
     }
 
     mt::eIncident_Wave_Type string_to_incident_wave_type_enum(const std::string &iw_type) {
-      if (iw_type == "eIWT_Plane_Wave") {
+      if (iw_type == "Plane_Wave") {
         return mt::eIWT_Plane_Wave;
-      } else if (iw_type == "eIWT_Convergent_Wave") { 
+      } else if (iw_type == "Convergent_Wave") { 
         return mt::eIWT_Convergent_Wave;
-      } else if (iw_type == "eIWT_User_Define_Wave") { 
+      } else if (iw_type == "User_Define_Wave") { 
         return mt::eIWT_User_Define_Wave;
-      } else if (iw_type == "eIWT_Auto") { 
+      } else if (iw_type == "Auto") { 
         return mt::eIWT_Auto;
       }
       throw std::runtime_error("Invalid iw type");
