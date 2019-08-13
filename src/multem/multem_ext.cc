@@ -50,7 +50,6 @@ namespace pybind11 { namespace detail {
         src.y, 
         src.z, 
         src.sigma, 
-        src, 
         src.occupancy, 
         src.region, 
         src.charge).release();
@@ -187,7 +186,17 @@ namespace pybind11 { namespace detail {
 
 PYBIND11_MODULE(multem_ext, m)
 {
-  
+  py::class_<multem::CrystalParameters>(m, "CrystalParameters")
+    .def(py::init<>())
+    .def_readwrite("na", &multem::CrystalParameters::na)
+    .def_readwrite("nb", &multem::CrystalParameters::nb)
+    .def_readwrite("nc", &multem::CrystalParameters::nc)
+    .def_readwrite("a", &multem::CrystalParameters::a)
+    .def_readwrite("b", &multem::CrystalParameters::b)
+    .def_readwrite("c", &multem::CrystalParameters::c)
+    .def_readwrite("layers", &multem::CrystalParameters::layers)
+    ;
+ 
   py::class_<multem::STEMDetector>(m, "STEMDetector")
     .def_readwrite("type", &multem::STEMDetector::type)
     .def_readwrite("cir", &multem::STEMDetector::cir)
@@ -375,4 +384,6 @@ PYBIND11_MODULE(multem_ext, m)
 
   m.def("mrad_to_sigma", &multem::mrad_to_sigma);
   m.def("iehwgd_to_sigma", &multem::iehwgd_to_sigma);
+
+  m.def("crystal_by_layers", &multem::crystal_by_layers);
 }

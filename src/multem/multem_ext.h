@@ -41,6 +41,29 @@ namespace multem {
           charge(0) {}
   };
 
+  class CrystalParameters {
+  public:
+    
+    typedef std::vector<Atom> Layer;
+
+    int na;
+    int nb;
+    int nc;
+    double a;
+    double b;
+    double c;
+    std::vector<Layer> layers;
+
+    CrystalParameters()
+      : na(0),
+        nb(0),
+        nc(0),
+        a(0),
+        b(0),
+        c(0) {}
+
+  };
+
   class AmorphousLayer {
   public:
 
@@ -516,6 +539,8 @@ namespace multem {
   
   double mrad_to_sigma(double E0, double theta);
   double iehwgd_to_sigma(double value);
+
+  std::vector<Atom> crystal_by_layers(const CrystalParameters &params);
 }
 
 #endif

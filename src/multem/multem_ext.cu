@@ -17,6 +17,7 @@
 #include <types.cuh>
 #include <input_multislice.cuh>
 #include <device_functions.cuh>
+#include <crystal_spec.hpp>
 #include <multem.cu>
 
 namespace multem {
@@ -772,5 +773,52 @@ namespace multem {
   double iehwgd_to_sigma(double value) {
     return mt::iehwgd_2_sigma(value);
   }
+
+  std::vector<Atom> crystal_by_layers(const CrystalParameters &params) {
+    
+    // Get the layer data 
+    mt::Vector<mt::Atom_Data<double>, mt::e_host> layers(params.layers.size());
+    for(auto i = 0; i < params.layers.size(); ++i) {
+      layers[i].resize(params.layers[i].size());
+      for (auto j = 0; j < params.layers[i].size(); ++j) {
+        layers[i].Z[j] = params.layers[i][j].element;
+        layers[i].x[j] = params.layers[i][j].x;
+        layers[i].y[j] = params.layers[i][j].y;
+        layers[i].z[j] = params.layers[i][j].z;
+        layers[i].sigma[j] = params.layers[i][j].sigma;
+        layers[i].occ[j] = params.layers[i][j].occupancy;
+        layers[i].region[j] = abs(params.layers[i][j].region);
+        layers[i].charge[j] = params.layers[i][j].charge;
+      }
+    }
+
+    // Get the atoms from the crystal specification
+    mt::Crystal_Spec<double> crystal_spec;
+    mt::Atom_Data<double> atoms;
+    crystal_spec(
+      params.na, 
+      params.nb, 
+      params.nc, 
+      params.a, 
+      params.b, 
+      params.c, 
+      layers, 
+      atoms);
+
+    // Copy to vector for output
+    std::vector<Atom> result(atoms.size());
+    for (auto i = 0; i < atoms.size(); ++i) {
+      result[i].element = atoms.Z[i];
+      result[i].x = atoms.x[i];
+      result[i].y = atoms.y[i];
+      result[i].z = atoms.z[i];
+      result[i].sigma = atoms.sigma[i];
+      result[i].occupancy = atoms.occ[i];
+      result[i].region = atoms.region[i];
+      result[i].charge = atoms.charge[i];
+    }
+    return result;
+  }
+
 }
 
