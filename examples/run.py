@@ -1,12 +1,13 @@
 
 import multem
+import numpy
 
-print(multem.is_gpu_available())
-print(multem.number_of_gpu_available())
+input_multislice = multem.Input()
+config = multem.SystemConfiguration()
 
-system_conf = multem.SystemConfiguration(device="device", gpu_device=3)
-print(system_conf.is_device())
-print(system_conf.get_device())
+# print(multem.is_gpu_available())
+# if not multem.is_gpu_available():
+config.device = "host"
+result = multem.simulate(config, input_multislice)
 
-input_multislice = multem.InputMultislice()
-input_multislice.set_system_conf(system_conf)
+#print(result)

@@ -509,11 +509,13 @@ namespace multem {
 
   };
 
-
   Output simulate(SystemConfiguration config, Input input);
 
   bool is_gpu_available();
   int number_of_gpu_available();
+  
+  double mrad_to_sigma(double E0, double theta);
+  double iehwgd_to_sigma(double value);
 }
 
 #endif

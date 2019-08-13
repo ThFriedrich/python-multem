@@ -764,6 +764,13 @@ namespace multem {
   int number_of_gpu_available() {
     return mt::number_of_gpu_available();
   }
+  
+  double mrad_to_sigma(double E0, double theta) {
+    return mt::rad_2_sigma(E0, theta * mt::c_mrad_2_rad);
+  }
 
+  double iehwgd_to_sigma(double value) {
+    return mt::iehwgd_2_sigma(value);
+  }
 }
 

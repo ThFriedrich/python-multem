@@ -372,4 +372,7 @@ PYBIND11_MODULE(multem_ext, m)
 
   m.def("is_gpu_available", &multem::is_gpu_available);
   m.def("number_of_gpu_available", &multem::number_of_gpu_available);
+
+  m.def("mrad_to_sigma", &multem::mrad_to_sigma);
+  m.def("iehwgd_to_sigma", &multem::iehwgd_to_sigma);
 }
