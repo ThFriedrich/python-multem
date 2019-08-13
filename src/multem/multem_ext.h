@@ -284,7 +284,7 @@ namespace multem {
      */
     Input()
       : interaction_model("Multislice"), 
-        potential_type("Lobato"),
+        potential_type("Lobato_0_12"),
         operation_mode("Normal"),
         memory_size(0),
         reverse_multislice(false),
@@ -317,7 +317,7 @@ namespace multem {
         ny(256),
         bwl(0),
         simulation_type("EWRS"),
-        iw_type("auto"),
+        iw_type("Auto"),
         iw_psi(0),
         iw_x(0.0),
         iw_y(0.0),
