@@ -83,7 +83,9 @@ namespace pybind11 { namespace detail {
         src.dz).release();
     }
   };
-  
+ 
+
+
  
   /* template <> */ 
   /* class type_caster<multem::STEMDetector::Angles> { */
@@ -160,11 +162,10 @@ namespace pybind11 { namespace detail {
   /*   } */
   /* }; */
 
-
   template <typename T>
   py::class_< multem::Image<T> > image_class(py::module &m, const char *name) {
-    py::class_< multem::Image<T> >(m, name, py::buffer_protocol())
-      .def_buffer([](multem::Image<T> &self) -> py::buffer_info {
+    return py::class_< multem::Image<T> >(m, name, py::buffer_protocol())
+      .def_buffer([](multem::Image<T>& self) -> pybind11::buffer_info { 
         typedef typename multem::Image<T>::value_type value_type;
         return py::buffer_info(
           self.data.data(), 
@@ -176,13 +177,11 @@ namespace pybind11 { namespace detail {
             self.shape[1] 
           },
           { 
-            sizeof(value_type) * self.shape[0],
+            sizeof(value_type) * self.shape[1],
             sizeof(value_type) 
           });
-      })
-      ;
+      });
   }
-
 }}
 
 
