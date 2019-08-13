@@ -659,6 +659,7 @@ namespace multem {
       result.x.assign(output_multislice.x.begin(), output_multislice.x.end());
       result.y.assign(output_multislice.y.begin(), output_multislice.y.end());
       result.thick.assign(output_multislice.thick.begin(), output_multislice.thick.end());
+      result.data.resize(output_multislice.thick.size());
 
       // Write the output data
       if (output_multislice.is_STEM() || output_multislice.is_EELS()) {
