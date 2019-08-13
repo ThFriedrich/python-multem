@@ -1,6 +1,6 @@
-
 import multem
 import numpy
+from cu001_crystal import cu001_crystal
 
 input_multislice = multem.Input()
 system_conf = multem.SystemConfiguration()
@@ -26,15 +26,26 @@ input_multislice.pn_dim = 110
 input_multislice.pn_seed = 300183
 
 # Specimen information
-# na = 16; nb = 16; nc = 20; ncu = 2; rms3d = 0.085;
+na = 16
+nb = 16
+nc = 20
+ncu = 2
+rms3d = 0.085
 
-# [input_multislice.spec_atoms, input_multislice.spec_lx...
-#  , input_multislice.spec_ly, input_multislice.spec_lz...
-#  , a, b, c, input_multislice.spec_dz] = Cu001Crystal(na, nb, nc, ncu, rms3d);
+(
+    input_multislice.spec_atoms,
+    input_multislice.spec_lx,
+    input_multislice.spec_ly,
+    input_multislice.spec_lz,
+    a,
+    b,
+    c,
+    input_multislice.spec_dz,
+) = cu001_crystal(na, nb, nc, ncu, rms3d)
 
 # Specimen thickness
 input_multislice.thick_type = "Through_Thick"
-# input_multislice.thick = c:c:1000
+input_multislice.thick = numpy.arange(c, 1000, c)
 
 # x-y sampling
 input_multislice.nx = 1024
@@ -78,4 +89,4 @@ input_multislice.obj_lens_zero_defocus_type = "First"
 input_multislice.obj_lens_zero_defocus_plane = 0
 
 # Do the simulation
-output_multislice = multem.simulate(system_conf, input_multislice); 
+output_multislice = multem.simulate(system_conf, input_multislice)
