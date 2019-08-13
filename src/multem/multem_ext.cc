@@ -164,6 +164,18 @@ namespace pybind11 { namespace detail {
   template <typename T>
   py::class_< multem::Image<T> > image_class(py::module &m, const char *name) {
     return py::class_< multem::Image<T> >(m, name, py::buffer_protocol())
+      .def(py::init<>())
+      .def(py::init([](py::array_t<T> array) -> multem::Image<T> {
+        py::buffer_info buffer = array.request();
+        if (buffer.ndim != 2) {
+          throw std::runtime_error("Number of dimensions must be two");
+        }
+        return multem::Image<T>(
+          (T *) buffer.ptr, 
+          typename multem::Image<T>::shape_type({
+            buffer.shape[0], 
+            buffer.shape[1]}));
+      }))
       .def_buffer([](multem::Image<T>& self) -> pybind11::buffer_info { 
         typedef typename multem::Image<T>::value_type value_type;
         return py::buffer_info(
@@ -360,21 +372,21 @@ PYBIND11_MODULE(multem_ext, m)
 
   py::class_<multem::Data>(m, "Data")
     .def(py::init<>())
-    .def_readonly("image_tot", &multem::Data::image_tot)
-    .def_readonly("image_coh", &multem::Data::image_coh)
-    .def_readonly("m2psi_tot", &multem::Data::m2psi_tot)
-    .def_readonly("m2psi_coh", &multem::Data::m2psi_coh)
-    .def_readonly("psi_coh", &multem::Data::psi_coh)
+    .def_readwrite("image_tot", &multem::Data::image_tot)
+    .def_readwrite("image_coh", &multem::Data::image_coh)
+    .def_readwrite("m2psi_tot", &multem::Data::m2psi_tot)
+    .def_readwrite("m2psi_coh", &multem::Data::m2psi_coh)
+    .def_readwrite("psi_coh", &multem::Data::psi_coh)
     ;
 
   py::class_<multem::Output>(m, "Output")
     .def(py::init<>())
-    .def_readonly("dx", &multem::Output::dx)
-    .def_readonly("dy", &multem::Output::dy)
-    .def_readonly("x", &multem::Output::x)
-    .def_readonly("y", &multem::Output::y)
-    .def_readonly("thick", &multem::Output::thick)
-    .def_readonly("data", &multem::Output::data)
+    .def_readwrite("dx", &multem::Output::dx)
+    .def_readwrite("dy", &multem::Output::dy)
+    .def_readwrite("x", &multem::Output::x)
+    .def_readwrite("y", &multem::Output::y)
+    .def_readwrite("thick", &multem::Output::thick)
+    .def_readwrite("data", &multem::Output::data)
     ;
 
   m.def("simulate", &multem::simulate);
