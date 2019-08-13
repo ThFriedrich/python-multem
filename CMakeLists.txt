@@ -3,9 +3,13 @@ cmake_minimum_required(VERSION 3.11.0)
 # Set the project name
 project(multem CXX CUDA)
 
+# Set the cmake module path
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 # Need pybind11 for Python C/C++ extensions
 find_package(pybind11 REQUIRED)
 find_package(CUDA REQUIRED)
+find_package(FFTW REQUIRED)
 
 # Turn off LTO (has problems with cuda)
 set(HAS_FLTO False)
@@ -24,6 +28,12 @@ target_include_directories(multem_ext PUBLIC
   src
   MULTEM/src
   MULTEM/gui_multem)
+
+# Link to the CUDA libraries
+target_link_libraries(multem_ext PUBLIC
+  ${CUDA_LIBRARIES} 
+  ${CUDA_CUFFT_LIBRARIES}
+  ${FFTW_LIBRARIES})
 
 # Set the coverage compile and link flags for gcc or clang
 set(COVERAGE_COMPILE_FLAGS -coverage)
