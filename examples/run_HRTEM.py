@@ -1,5 +1,6 @@
 import multem
 import numpy
+import pickle
 from cu001_crystal import cu001_crystal
 
 input_multislice = multem.Input()
@@ -90,3 +91,17 @@ input_multislice.obj_lens_zero_defocus_plane = 0
 
 # Do the simulation
 output_multislice = multem.simulate(system_conf, input_multislice)
+
+data = {
+    "dx": output_multislice.dx,
+    "dy": output_multislice.dy,
+    "x": numpy.array(output_multislice.x, dtype=numpy.float64),
+    "y": numpy.array(output_multislice.y, dtype=numpy.float64),
+    "thick": numpy.array(output_multislice.thick, dtype=numpy.float64),
+    "data": [
+        {"m2psi_tot": numpy.array(d.m2psi_tot, numpy.float64)}
+        for d in output_multislice.data
+    ],
+}
+
+pickle.dump(data, open("simulated_HRTEM.p", "wb"))

@@ -12,6 +12,9 @@
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+#include <map>
+#include <string>
+#include <sstream>
 #include <cuda_runtime.h>
 #include <multem/multem_ext.h>
 #include <types.cuh>
@@ -24,268 +27,382 @@ namespace multem {
 
   namespace detail {
 
-    mt::eDevice string_to_device_enum(const std::string &device) {
-      if (device == "host") {
-        return mt::e_host;
-      } else if (device == "device") {
-        return mt::e_device;
-      } else if (device == "host_device") {
-        return mt::e_host_device;
-      }
-      throw std::runtime_error("Unknown device");
+    /**
+     * Template type containing enum string info
+     */
+    template <typename T>
+    struct EnumStrings {
+      static std::string name();
+      static std::map<T, std::string> items();
+    };
+
+    /**
+     * Convert the enum into a string
+     * @param value The enum value
+     * @returns The enum string
+     */
+    template <
+      typename T,
+      typename std::enable_if<std::is_enum<T>::value>::type* = nullptr>
+    std::string to_string(const T &value) {
+      return EnumStrings<T>::items()[value];
     }
 
-    mt::ePrecision string_to_precision_enum(const std::string &precision) {
-      if (precision == "float") {
-        return mt::eP_float;
-      } else if (precision == "double") {
-        return mt::eP_double;
+    /**
+     * Produce an error message if the case of an unknown enum string
+     * @param name The enum string
+     * @returns The error message
+     */
+    template<
+      typename T,
+      typename std::enable_if<std::is_enum<T>::value>::type* = nullptr>
+    std::string unknown_enum_string_message(const std::string &name) {
+      std::stringstream msg;
+      msg << "Unknown enum string for enum "
+          << "\"" << EnumStrings<T>::name() << "\"."
+          << " Got " << name << ", expected one of:\n";
+      for (auto it : EnumStrings<T>::items()) {
+        msg << "    " << it.second << "\n";
       }
-      throw std::runtime_error("Unknown precision");
+      return msg.str();
     }
 
-    mt::eElec_Spec_Int_Model string_to_interaction_model_enum(const std::string &interaction_model) {
-      if (interaction_model == "Multislice") {
-        return mt::eESIM_Multislice;
-      } else if (interaction_model == "Phase_Object") {
-        return mt::eESIM_Phase_Object;
-      } else if (interaction_model == "Weak_Phase_Object") {
-        return mt::eESIM_Weak_Phase_Object;
+    /**
+     * Convert the string into an enum value
+     * @param name The enum string
+     * @returns The enum value
+     */
+    template<
+      typename T,
+      typename std::enable_if<std::is_enum<T>::value>::type* = nullptr>
+    T from_string(std::string name) {
+      for (auto it : EnumStrings<T>::items()) {
+        if (it.second == name) {
+          return it.first;
+        }
       }
-      throw std::runtime_error("Invalid interaction model");
+      throw std::runtime_error(unknown_enum_string_message<T>(name));
     }
 
-    mt::ePotential_Type string_to_potential_type_enum(const std::string &potential_type) {
-      if (potential_type == "Doyle_0_4") {
-        return mt::ePT_Doyle_0_4;
-      } else if (potential_type == "Peng_0_4") {
-        return mt::ePT_Peng_0_4;
-      } else if (potential_type == "Peng_0_12") {
-        return mt::ePT_Peng_0_12;
-      } else if (potential_type == "Kirkland_0_12") {
-        return mt::ePT_Kirkland_0_12;
-      } else if (potential_type == "Weickenmeier_0_12") {
-        return mt::ePT_Weickenmeier_0_12;
-      } else if (potential_type == "Lobato_0_12") {
-        return mt::ePT_Lobato_0_12;
-      } else if (potential_type == "none") {
-        return mt::ePT_none;
-      }
-      throw std::runtime_error("Invalid potential type");
-    }
-
-    mt::ePhonon_Model string_to_phonon_model_enum(const std::string &pn_model) {
-      if (pn_model == "Still_Atom") {
-        return mt::ePM_Still_Atom;
-      } else if (pn_model == "Absorptive_Model") {
-        return mt::ePM_Absorptive_Model;
-      } else if (pn_model == "Frozen_Phonon") {
-        return mt::ePM_Frozen_Phonon;
-      }
-      throw std::runtime_error("Invalid phonon model");
-    }
-
-    mt::eRot_Point_Type string_to_rot_point_type_enum(const std::string &spec_rot_center_type) {
-      if (spec_rot_center_type == "geometric_center") {
-        return mt::eRPT_geometric_center;
-      } else if (spec_rot_center_type == "User_Define") {
-        return mt::eRPT_User_Define;
-      }
-      throw std::runtime_error("Invalid spec rot center type");
-    }
-
-    mt::eThick_Type string_to_thick_type_enum(const std::string &thick_type) {
-      if (thick_type == "Whole_Spec") {
-        return mt::eTT_Whole_Spec;
-      } else if (thick_type == "Through_Thick") {
-        return mt::eTT_Through_Thick;
-      } else if (thick_type == "Through_Slices") {
-        return mt::eTT_Through_Slices;
-      }
-      throw std::runtime_error("Invalid thickness type");
-    }
-
-    mt::ePotential_Slicing string_to_potential_slicing_enum(const std::string &potential_slicing) {
-      if (potential_slicing == "Planes") {
-        return mt::ePS_Planes;
-      } else if (potential_slicing == "dz_Proj") {
-        return mt::ePS_dz_Proj;
-      } else if (potential_slicing == "dz_Sub") {
-        return mt::ePS_dz_Sub;
-      } else if (potential_slicing == "Auto") {
-        return mt::ePS_Auto;
-      }
-      throw std::runtime_error("Invalid potential slicing");
-    }
-
-    mt::eTEM_Sim_Type string_to_tem_sim_type_enum(const std::string &simulation_type) {
-      if (simulation_type == "STEM") {
-        return mt::eTEMST_STEM ;
-      } else if (simulation_type == "ISTEM") {
-        return mt::eTEMST_ISTEM ;
-      } else if (simulation_type == "CBED") {
-        return mt::eTEMST_CBED ;
-      } else if (simulation_type == "CBEI") {
-        return mt::eTEMST_CBEI ;
-      } else if (simulation_type == "ED") {
-        return mt::eTEMST_ED ;
-      } else if (simulation_type == "HRTEM") {
-        return mt::eTEMST_HRTEM ;
-      } else if (simulation_type == "PED") {
-        return mt::eTEMST_PED ;
-      } else if (simulation_type == "HCTEM") {
-        return mt::eTEMST_HCTEM ;
-      } else if (simulation_type == "EWFS") {
-        return mt::eTEMST_EWFS ;
-      } else if (simulation_type == "EWRS") {
-        return mt::eTEMST_EWRS ;
-      } else if (simulation_type == "EELS") {
-        return mt::eTEMST_EELS ;
-      } else if (simulation_type == "EFTEM") {
-        return mt::eTEMST_EFTEM ;
-      } else if (simulation_type == "IWFS") {
-        return mt::eTEMST_IWFS ;
-      } else if (simulation_type == "IWRS") {
-        return mt::eTEMST_IWRS ;
-      } else if (simulation_type == "PPFS") {
-        return mt::eTEMST_PPFS ;
-      } else if (simulation_type == "PPRS") {
-        return mt::eTEMST_PPRS ;
-      } else if (simulation_type == "TFFS") {
-        return mt::eTEMST_TFFS ;
-      } else if (simulation_type == "TFRS") {
-        return mt::eTEMST_TFRS ;
-      } else if (simulation_type == "PropFS") {
-        return mt::eTEMST_PropFS ;
-      } else if (simulation_type == "PropRS") {
-        return mt::eTEMST_PropRS ;
-      }
-      throw std::runtime_error("Invalid simulation type");
-    }
-
-    mt::eIncident_Wave_Type string_to_incident_wave_type_enum(const std::string &iw_type) {
-      if (iw_type == "Plane_Wave") {
-        return mt::eIWT_Plane_Wave;
-      } else if (iw_type == "Convergent_Wave") { 
-        return mt::eIWT_Convergent_Wave;
-      } else if (iw_type == "User_Define_Wave") { 
-        return mt::eIWT_User_Define_Wave;
-      } else if (iw_type == "Auto") { 
-        return mt::eIWT_Auto;
-      }
-      throw std::runtime_error("Invalid iw type");
-    }
-
-    mt::eIllumination_Model string_to_illumination_model_enum(const std::string &illumination_model) {
-      if (illumination_model == "Coherent") {
-        return mt::eIM_Coherent;
-      } else if (illumination_model == "Partial_Coherent") {
-        return mt::eIM_Partial_Coherent;
-      } else if (illumination_model == "Trans_Cross_Coef") {
-        return mt::eIM_Trans_Cross_Coef;
-      } else if (illumination_model == "Full_Integration") {
-        return mt::eIM_Full_Integration;
-      } else if (illumination_model == "none") {
-        return mt::eIM_none;
-      }
-      throw std::runtime_error("Invalid illumination model");
-    }
+    template <>
+    struct EnumStrings<mt::eDevice> {
       
-    mt::eOperation_Mode string_to_operation_mode_enum(const std::string &operation_mode) {
-      if (operation_mode == "Normal") {
-        return mt::eOM_Normal;
-      } else if (operation_mode == "Advanced") {
-        return mt::eOM_Advanced;
+      static std::string name() {
+        return "eDevice";
       }
-      throw std::runtime_error("Invalid operation mode");
-    }
 
-    mt::eLens_Var_Type string_to_lens_var_type_enum(const std::string &cdl_var_type) {
-      if (cdl_var_type == "off") {
-        return mt::eLVT_off;
-      } else if (cdl_var_type == "m") {
-        return mt::eLVT_m;
-      } else if (cdl_var_type == "f") {
-        return mt::eLVT_f;
-      } else if (cdl_var_type == "Cs3") {
-        return mt::eLVT_Cs3;
-      } else if (cdl_var_type == "Cs5") {
-        return mt::eLVT_Cs5;
-      } else if (cdl_var_type == "mfa2") {
-        return mt::eLVT_mfa2;
-      } else if (cdl_var_type == "afa2") {
-        return mt::eLVT_afa2;
-      } else if (cdl_var_type == "mfa3") {
-        return mt::eLVT_mfa3;
-      } else if (cdl_var_type == "afa3") {
-        return mt::eLVT_afa3;
-      } else if (cdl_var_type == "inner_aper_ang") {
-        return mt::eLVT_inner_aper_ang;
-      } else if (cdl_var_type == "outer_aper_ang") {
-        return mt::eLVT_outer_aper_ang;
+      static std::map<mt::eDevice, std::string> items() {
+        return {
+          { mt::e_host, "host" },
+          { mt::e_device, "device" },
+          { mt::e_host_device, "host_device" },
+        };
       }
-      throw std::runtime_error("Invalid cdl_var_type");
-    }
+    };
 
-    mt::eTemporal_Spatial_Incoh string_to_temporal_spatial_incoh_enum(const
-        std::string &temporal_spatial_incoh) {
-      if (temporal_spatial_incoh == "Temporal_Spatial") {
-        return mt::eTSI_Temporal_Spatial;
-      } else if (temporal_spatial_incoh == "Temporal") {
-        return mt::eTSI_Temporal;
-      } else if (temporal_spatial_incoh == "Spatial") {
-        return mt::eTSI_Spatial;
-      } else if (temporal_spatial_incoh == "none") {
-        return mt::eTSI_none;
-      }
-      throw std::runtime_error("Invalid temporal spatial incohenence");
-    }
 
-    mt::eZero_Defocus_Type string_to_defocus_type_enum(
-        const std::string &defocus_type) {
-      if (defocus_type == "First") {
-        return mt::eZDT_First;
-      } else if (defocus_type == "Middle") {
-        return mt::eZDT_Middle;
-      } else if (defocus_type == "Last") {
-        return mt::eZDT_Last;
-      } else if (defocus_type == "User_Define") {
-        return mt::eZDT_User_Define;
+    template<>
+    struct EnumStrings<mt::ePrecision> {
+      
+      static std::string name() {
+        return "mt::ePrecision";
       }
-      throw std::runtime_error("Invalid defocus type");
-    }
+      
+      static std::map<mt::ePrecision, std::string> items() {
+        return {
+          { mt::eP_float, "float" },
+          { mt::eP_double, "double" }, 
+        };
+      }
+    };
 
-    mt::eScanning_Type string_to_scanning_type_enum(const std::string &scanning_type) {
-      if (scanning_type == "Line") {
-        return mt::eST_Line;
-      } else if (scanning_type == "Area") {
-        return mt::eST_Area;
+    template<>
+    struct EnumStrings<mt::eElec_Spec_Int_Model> {
+      
+      static std::string name() {
+        return "mt::eElec_Spec_Int_Model";
       }
-      throw std::runtime_error("Invalid scanning type");
-    }
+      
+      static std::map<mt::eElec_Spec_Int_Model, std::string> items() {
+        return {
+          { mt::eESIM_Multislice, "Multislice" },
+          { mt::eESIM_Phase_Object, "Phase_Object" },
+          { mt::eESIM_Weak_Phase_Object, "Weak_Phase_Object" },
+        };
+      }
+    };
 
-    mt::eDetector_Type string_to_detector_type_enum(const std::string &detector_type) {
-      if (detector_type == "Circular") {
-        return mt::eDT_Circular;
-      } else if (detector_type == "Radial") {
-        return mt::eDT_Radial;
-      } else if (detector_type == "Matrix") {
-        return mt::eDT_Matrix;
+    template<>
+    struct EnumStrings<mt::ePotential_Type> {
+      
+      static std::string name() {
+        return "mt::ePotential_Type";
       }
-      throw std::runtime_error("Invalid detector type");
-    }
+      
+      static std::map<mt::ePotential_Type, std::string> items() {
+        return {
+          { mt::ePT_Doyle_0_4, "Doyle_0_4" },
+          { mt::ePT_Peng_0_4, "Peng_0_4" },
+          { mt::ePT_Peng_0_12, "Peng_0_12" },
+          { mt::ePT_Kirkland_0_12, "Kirkland_0_12" },
+          { mt::ePT_Weickenmeier_0_12, "Weickenmeier_0_12" },
+          { mt::ePT_Lobato_0_12, "Lobato_0_12" },
+          { mt::ePT_none, "none" },
+        };
+      }
+    };
 
-    mt::eChannelling_Type string_to_channelling_type_enum(const std::string
-        &channelling_type) {
-      if (channelling_type == "Single_Channelling") {
-        return mt::eCT_Single_Channelling;
-      } else if (channelling_type == "Mixed_Channelling") {
-        return mt::eCT_Mixed_Channelling;
-      } else if (channelling_type == "Double_Channelling") {
-        return mt::eCT_Double_Channelling;
+    template<>
+    struct EnumStrings<mt::ePhonon_Model> {
+      
+      static std::string name() {
+        return "mt::ePhonon_Model";
       }
-      throw std::runtime_error("Invalid channelling type");
-    }
+      
+      static std::map<mt::ePhonon_Model, std::string> items() {
+        return {
+          { mt::ePM_Still_Atom, "Still_Atom" },
+          { mt::ePM_Absorptive_Model, "Absorptive_Model" },
+          { mt::ePM_Frozen_Phonon, "Frozen_Phonon" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eRot_Point_Type> {
+      
+      static std::string name() {
+        return "mt::eRot_Point_Type";
+      }
+      
+      static std::map<mt::eRot_Point_Type, std::string> items() {
+        return {
+          { mt::eRPT_geometric_center, "geometric_center" },
+          { mt::eRPT_User_Define, "User_Define" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eThick_Type> {
+      
+      static std::string name() {
+        return "mt::eThick_Type";
+      }
+      
+      static std::map<mt::eThick_Type, std::string> items() {
+        return {
+          { mt::eTT_Whole_Spec, "Whole_Spec" },
+          { mt::eTT_Through_Thick, "Through_Thick" },
+          { mt::eTT_Through_Slices, "Through_Slices" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::ePotential_Slicing> {
+      
+      static std::string name() {
+        return "mt::ePotential_Slicing";
+      }
+      
+      static std::map<mt::ePotential_Slicing, std::string> items() {
+        return {
+          { mt::ePS_Planes, "Planes" },
+          { mt::ePS_dz_Proj, "dz_Proj" },
+          { mt::ePS_dz_Sub, "dz_Sub" },
+          { mt::ePS_Auto, "Auto" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eTEM_Sim_Type> {
+      
+      static std::string name() {
+        return "mt::eTEM_Sim_Type";
+      }
+      
+      static std::map<mt::eTEM_Sim_Type, std::string> items() {
+        return {
+          { mt::eTEMST_STEM , "STEM" },
+          { mt::eTEMST_ISTEM , "ISTEM" },
+          { mt::eTEMST_CBED , "CBED" },
+          { mt::eTEMST_CBEI , "CBEI" },
+          { mt::eTEMST_ED , "ED" },
+          { mt::eTEMST_HRTEM , "HRTEM" },
+          { mt::eTEMST_PED , "PED" },
+          { mt::eTEMST_HCTEM , "HCTEM" },
+          { mt::eTEMST_EWFS , "EWFS" },
+          { mt::eTEMST_EWRS , "EWRS" },
+          { mt::eTEMST_EELS , "EELS" },
+          { mt::eTEMST_EFTEM , "EFTEM" },
+          { mt::eTEMST_IWFS , "IWFS" },
+          { mt::eTEMST_IWRS , "IWRS" },
+          { mt::eTEMST_PPFS , "PPFS" },
+          { mt::eTEMST_PPRS , "PPRS" },
+          { mt::eTEMST_TFFS , "TFFS" },
+          { mt::eTEMST_TFRS , "TFRS" },
+          { mt::eTEMST_PropFS , "PropFS" },
+          { mt::eTEMST_PropRS , "PropRS" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eIncident_Wave_Type> {
+      
+      static std::string name() {
+        return "mt::eIncident_Wave_Type";
+      }
+      
+      static std::map<mt::eIncident_Wave_Type, std::string> items() {
+        return {
+          { mt::eIWT_Plane_Wave, "Plane_Wave" },
+          { mt::eIWT_Convergent_Wave, "Convergent_Wave" },
+          { mt::eIWT_User_Define_Wave, "User_Define_Wave" },
+          { mt::eIWT_Auto, "Auto" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eIllumination_Model> {
+      
+      static std::string name() {
+        return "mt::eIllumination_Model";
+      }
+      
+      static std::map<mt::eIllumination_Model, std::string> items() {
+        return {
+          { mt::eIM_Coherent, "Coherent" },
+          { mt::eIM_Partial_Coherent, "Partial_Coherent" },
+          { mt::eIM_Trans_Cross_Coef, "Trans_Cross_Coef" },
+          { mt::eIM_Full_Integration, "Full_Integration" },
+          { mt::eIM_none, "none" },
+        };
+      }
+    };
+      
+    template<>
+    struct EnumStrings<mt::eOperation_Mode> {
+      
+      static std::string name() {
+        return "mt::eOperation_Mode";
+      }
+      
+      static std::map<mt::eOperation_Mode, std::string> items() {
+        return {
+          { mt::eOM_Normal, "Normal" },
+          { mt::eOM_Advanced, "Advanced" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eLens_Var_Type> {
+      
+      static std::string name() {
+        return "mt::eLens_Var_Type";
+      }
+      
+      static std::map<mt::eLens_Var_Type, std::string> items() {
+        return {
+          { mt::eLVT_off, "off" },
+          { mt::eLVT_m, "m" },
+          { mt::eLVT_f, "f" },
+          { mt::eLVT_Cs3, "Cs3" },
+          { mt::eLVT_Cs5, "Cs5" },
+          { mt::eLVT_mfa2, "mfa2" },
+          { mt::eLVT_afa2, "afa2" },
+          { mt::eLVT_mfa3, "mfa3" },
+          { mt::eLVT_afa3, "afa3" },
+          { mt::eLVT_inner_aper_ang, "inner_aper_ang" },
+          { mt::eLVT_outer_aper_ang, "outer_aper_ang" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eTemporal_Spatial_Incoh> {
+      
+      static std::string name() {
+        return "mt::eTemporal_Spatial_Incoh";
+      }
+      
+      static std::map<mt::eTemporal_Spatial_Incoh, std::string> items() {
+        return {
+          { mt::eTSI_Temporal_Spatial, "Temporal_Spatial" },
+          { mt::eTSI_Temporal, "Temporal" },
+          { mt::eTSI_Spatial, "Spatial" },
+          { mt::eTSI_none, "none" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eZero_Defocus_Type> {
+      
+      static std::string name() {
+        return "mt::eZero_Defocus_Type";
+      }
+      
+      static std::map<mt::eZero_Defocus_Type, std::string> items() {
+        return {
+          { mt::eZDT_First, "First" },
+          { mt::eZDT_Middle, "Middle" },
+          { mt::eZDT_Last, "Last" },
+          { mt::eZDT_User_Define, "User_Define" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eScanning_Type> {
+      
+      static std::string name() {
+        return "mt::eScanning_Type";
+      }
+      
+      static std::map<mt::eScanning_Type, std::string> items() {
+        return {
+          { mt::eST_Line, "Line" },
+          { mt::eST_Area, "Area" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eDetector_Type> {
+      
+      static std::string name() {
+        return "mt::eDetector_Type";
+      }
+      
+      static std::map<mt::eDetector_Type, std::string> items() {
+        return {
+          { mt::eDT_Circular, "Circular" },
+          { mt::eDT_Radial, "Radial" },
+          { mt::eDT_Matrix, "Matrix" },
+        };
+      }
+    };
+
+    template<>
+    struct EnumStrings<mt::eChannelling_Type> {
+      
+      static std::string name() {
+        return "mt::eChannelling_Type";
+      }
+      
+      static std::map<mt::eChannelling_Type, std::string> items() {
+        return {
+          { mt::eCT_Single_Channelling, "Single_Channelling" },
+          { mt::eCT_Mixed_Channelling, "Mixed_Channelling" },
+          { mt::eCT_Double_Channelling, "Double_Channelling" },
+        };
+      }
+    };
 
     template <typename FloatType, mt::eDevice DeviceType>
     void run_multislice_internal(
@@ -333,8 +450,8 @@ namespace multem {
  
     mt::System_Configuration read_system_configuration(const SystemConfiguration &config) {
       mt::System_Configuration system_conf;
-      system_conf.device = detail::string_to_device_enum(config.device);
-      system_conf.precision = detail::string_to_precision_enum(config.precision);
+      system_conf.device = detail::from_string<mt::eDevice>(config.device);
+      system_conf.precision = detail::from_string<mt::ePrecision>(config.precision);
       system_conf.cpu_ncores = config.cpu_ncores;
       system_conf.cpu_nthread = config.cpu_nthread;
       system_conf.gpu_device = config.gpu_device;
@@ -352,14 +469,18 @@ namespace multem {
       mt::Input_Multislice<FloatType> input_multislice;
 
       // Simulation type
-      input_multislice.simulation_type = string_to_tem_sim_type_enum(input.simulation_type);
-      input_multislice.interaction_model = string_to_interaction_model_enum(input.interaction_model);
-      input_multislice.potential_type = string_to_potential_type_enum(input.potential_type);
-      input_multislice.operation_mode = string_to_operation_mode_enum(input.operation_mode);
+      input_multislice.simulation_type = 
+        detail::from_string<mt::eTEM_Sim_Type>(input.simulation_type);
+      input_multislice.interaction_model = 
+        detail::from_string<mt::eElec_Spec_Int_Model>(input.interaction_model);
+      input_multislice.potential_type = 
+        detail::from_string<mt::ePotential_Type>(input.potential_type);
+      input_multislice.operation_mode = 
+        detail::from_string<mt::eOperation_Mode>(input.operation_mode);
       input_multislice.reverse_multislice = input.reverse_multislice;
 
       // Electron-Phonon interaction model
-      input_multislice.pn_model = string_to_phonon_model_enum(input.pn_model);
+      input_multislice.pn_model = detail::from_string<mt::ePhonon_Model>(input.pn_model);
       input_multislice.pn_coh_contrib = input.pn_coh_contrib;
       input_multislice.pn_single_conf = input.pn_single_conf;
       input_multislice.pn_nconf = input.pn_nconf;
@@ -414,20 +535,22 @@ namespace multem {
             input.spec_rot_u0[1],
             input.spec_rot_u0[2]);
         input_multislice.spec_rot_u0.normalized();
-        input_multislice.spec_rot_center_type = string_to_rot_point_type_enum(input.spec_rot_center_type);
+        input_multislice.spec_rot_center_type =
+          detail::from_string<mt::eRot_Point_Type>(input.spec_rot_center_type);
         input_multislice.spec_rot_center_p = mt::r3d<FloatType>(
             input.spec_rot_center_p[0],
             input.spec_rot_center_p[1],
             input.spec_rot_center_p[2]);
 
         // Specimen thickness
-        input_multislice.thick_type = string_to_thick_type_enum(input.thick_type);
+        input_multislice.thick_type = detail::from_string<mt::eThick_Type>(input.thick_type);
         if (!input_multislice.is_whole_spec() && full) {
           input_multislice.thick.assign(input.thick.begin(), input.thick.end());
         }
 
         // Potential slicing
-        input_multislice.potential_slicing = string_to_potential_slicing_enum(input.potential_slicing);
+        input_multislice.potential_slicing =
+          detail::from_string<mt::ePotential_Slicing>(input.potential_slicing);
       }
 
       // XY sampling
@@ -444,7 +567,7 @@ namespace multem {
           pbc_xy);
 
       // Incident wave
-      input_multislice.set_incident_wave_type(string_to_incident_wave_type_enum(input.iw_type));
+      input_multislice.set_incident_wave_type(detail::from_string<mt::eIncident_Wave_Type>(input.iw_type));
 
       if (input_multislice.is_user_define_wave() && full) {
         input_multislice.iw_psi.assign(
@@ -463,8 +586,10 @@ namespace multem {
       input_multislice.phi = input.phi*mt::c_deg_2_rad;
 
       // Illumination model
-      input_multislice.illumination_model = string_to_illumination_model_enum(input.illumination_model);
-      input_multislice.temporal_spatial_incoh = string_to_temporal_spatial_incoh_enum(input.temporal_spatial_incoh);
+      input_multislice.illumination_model =
+        detail::from_string<mt::eIllumination_Model>(input.illumination_model);
+      input_multislice.temporal_spatial_incoh =
+        detail::from_string<mt::eTemporal_Spatial_Incoh>(input.temporal_spatial_incoh);
 
       // Condenser lens
       input_multislice.cond_lens.m = input.cond_lens_m;
@@ -506,7 +631,7 @@ namespace multem {
 
       // zero defocus reference
       input_multislice.cond_lens.zero_defocus_type = 
-        string_to_defocus_type_enum(input.cond_lens_zero_defocus_type);
+        detail::from_string<mt::eZero_Defocus_Type>(input.cond_lens_zero_defocus_type);
       input_multislice.cond_lens.zero_defocus_plane = input.cond_lens_zero_defocus_plane;
       input_multislice.cond_lens.set_input_data(input_multislice.E_0, input_multislice.grid_2d);
 
@@ -550,13 +675,13 @@ namespace multem {
 
       // zero defocus reference
       input_multislice.obj_lens.zero_defocus_type = 
-        string_to_defocus_type_enum(input.obj_lens_zero_defocus_type);
+        detail::from_string<mt::eZero_Defocus_Type>(input.obj_lens_zero_defocus_type);
       input_multislice.obj_lens.zero_defocus_plane = input.obj_lens_zero_defocus_plane;
       input_multislice.obj_lens.set_input_data(input_multislice.E_0, input_multislice.grid_2d);
 
       // ISTEM/STEM 
       if (input_multislice.is_scanning()) {
-        input_multislice.scanning.type = string_to_scanning_type_enum(input.scanning_type);
+        input_multislice.scanning.type = detail::from_string<mt::eScanning_Type>(input.scanning_type);
         input_multislice.scanning.pbc = input.scanning_periodic;
         input_multislice.scanning.ns = input.scanning_ns;
         input_multislice.scanning.x0 = input.scanning_x0;
@@ -568,7 +693,7 @@ namespace multem {
 
       if (input_multislice.is_STEM()) {
         FloatType lambda = mt::get_lambda(input_multislice.E_0);
-        input_multislice.detector.type = string_to_detector_type_enum(input.detector.type);
+        input_multislice.detector.type = detail::from_string<mt::eDetector_Type>(input.detector.type);
 
         switch (input_multislice.detector.type) {
         case mt::eDT_Circular: 
@@ -625,7 +750,7 @@ namespace multem {
           input.eels_E_loss * mt::c_eV_2_keV, 
           input.eels_m_selection, 
           input.eels_collection_angle * mt::c_mrad_2_rad, 
-          string_to_channelling_type_enum(input.eels_channelling_type),
+          detail::from_string<mt::eChannelling_Type>(input.eels_channelling_type),
           input.eels_Z);
       } else if (input_multislice.is_EFTEM()) {
         input_multislice.eels_fr.set_input_data(
@@ -634,7 +759,7 @@ namespace multem {
             input.eftem_E_loss * mt::c_eV_2_keV, 
             input.eftem_m_selection, 
             input.eftem_collection_angle * mt::c_mrad_2_rad, 
-            string_to_channelling_type_enum(input.eftem_channelling_type),
+            detail::from_string<mt::eChannelling_Type>(input.eftem_channelling_type),
             input.eftem_Z);
       }
 

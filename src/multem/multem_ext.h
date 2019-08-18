@@ -442,6 +442,9 @@ namespace multem {
         output_area_iy_e(1) {}
   };
 
+  /**
+   * A class to hold the system configuration
+   */
   class SystemConfiguration {
   public:
 
@@ -462,6 +465,9 @@ namespace multem {
 
   };
 
+  /**
+   * A class to represent an image
+   */
   template <typename T>
   class Image {
   public:
@@ -475,6 +481,11 @@ namespace multem {
     Image()
       : shape({ 0, 0 }) {}
 
+    /**
+     * Construct the image from the pointer
+     * @param data_ The data pointer
+     * @param shape_ The image shape (Y, X)
+     */
     template <typename U>
     Image(const U *data_, shape_type shape_)
       : shape(shape_) {
@@ -483,6 +494,9 @@ namespace multem {
     }
   };
 
+  /**
+   * A class to represent a complex image
+   */
   template <typename T>
   class Image< std::complex<T> > {
   public:
@@ -496,6 +510,11 @@ namespace multem {
     Image()
       : shape({ 0, 0 }) {}
 
+    /**
+     * Construct the image from the pointer
+     * @param data_ The data pointer
+     * @param shape_ The image shape (Y, X)
+     */
     template <typename U>
     Image(const U *data_, shape_type shape_)
       : shape(shape_) {
@@ -508,6 +527,9 @@ namespace multem {
     
   };
 
+  /**
+   * A class to hold output data
+   */
   class Data {
   public:
 
@@ -520,6 +542,9 @@ namespace multem {
 
   };
 
+  /**
+   * A class to contain output from the simulation
+   */
   class Output {
   public:
       
