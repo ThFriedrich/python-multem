@@ -84,6 +84,9 @@ namespace multem {
       throw std::runtime_error(unknown_enum_string_message<T>(name));
     }
 
+    /**
+     * Specialization for mt::eDevice 
+     */
     template <>
     struct EnumStrings<mt::eDevice> {
       
@@ -100,7 +103,9 @@ namespace multem {
       }
     };
 
-
+    /**
+     * Specialization for mt::ePrecision 
+     */
     template<>
     struct EnumStrings<mt::ePrecision> {
       
@@ -116,6 +121,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eElec_Spec_Int_Model 
+     */
     template<>
     struct EnumStrings<mt::eElec_Spec_Int_Model> {
       
@@ -132,6 +140,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::ePotential_Type 
+     */
     template<>
     struct EnumStrings<mt::ePotential_Type> {
       
@@ -152,6 +163,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::ePhonon_Model 
+     */
     template<>
     struct EnumStrings<mt::ePhonon_Model> {
       
@@ -168,6 +182,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eRot_Point_Type 
+     */
     template<>
     struct EnumStrings<mt::eRot_Point_Type> {
       
@@ -183,6 +200,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eThick_Type 
+     */
     template<>
     struct EnumStrings<mt::eThick_Type> {
       
@@ -199,6 +219,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::ePotential_Slicing 
+     */
     template<>
     struct EnumStrings<mt::ePotential_Slicing> {
       
@@ -216,6 +239,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eTEM_Sim_Type 
+     */
     template<>
     struct EnumStrings<mt::eTEM_Sim_Type> {
       
@@ -249,6 +275,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eIncident_Wave_Type 
+     */
     template<>
     struct EnumStrings<mt::eIncident_Wave_Type> {
       
@@ -266,6 +295,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eIllumination_Model 
+     */
     template<>
     struct EnumStrings<mt::eIllumination_Model> {
       
@@ -284,6 +316,9 @@ namespace multem {
       }
     };
       
+    /**
+     * Specialization for mt::eOperation_Mode 
+     */
     template<>
     struct EnumStrings<mt::eOperation_Mode> {
       
@@ -299,6 +334,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eLens_Var_Type 
+     */
     template<>
     struct EnumStrings<mt::eLens_Var_Type> {
       
@@ -323,6 +361,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eTemporal_Spatial_Incoh 
+     */
     template<>
     struct EnumStrings<mt::eTemporal_Spatial_Incoh> {
       
@@ -340,6 +381,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eZero_Defocus_Type 
+     */
     template<>
     struct EnumStrings<mt::eZero_Defocus_Type> {
       
@@ -357,6 +401,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eScanning_Type 
+     */
     template<>
     struct EnumStrings<mt::eScanning_Type> {
       
@@ -372,6 +419,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eDetector_Type 
+     */
     template<>
     struct EnumStrings<mt::eDetector_Type> {
       
@@ -388,6 +438,9 @@ namespace multem {
       }
     };
 
+    /**
+     * Specialization for mt::eChannelling_Type 
+     */
     template<>
     struct EnumStrings<mt::eChannelling_Type> {
       
